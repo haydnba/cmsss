@@ -12,7 +12,7 @@ class App extends React.Component {
       config: {
         backend: {
           name: 'github',
-          repo: 'owner-name/repo-name'
+          repo: 'haydnba/cmsss'
         },
         collections: [
           { label: 'Blog', name: 'blog', folder: '_posts/blog', create: true, fields: [
