@@ -1,0 +1,25 @@
+*.log
+
+# Ignoring Node directories
+build/
+dist/
+types/
+coverage/
+.nyc_output/
+node_modules/
+.pnp*
+
+# Ignoring SAM directories
+.aws-sam/
+debug.sh
+
+# Ignoring credentials files
+.env*
+credentials.json
+env.json
+
+# Ignoring predefined scripts
+scripts.sh
+
+# Other Stuff
+.snippets
