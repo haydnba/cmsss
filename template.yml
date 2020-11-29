@@ -1,0 +1,153 @@
+# This is the SAM template that represents the architecture of your serverless application
+# https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-sam-template-basics.html
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  transformer
+
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+
+  #
+  # API
+  #
+
+
+  #
+  # Build
+  #
+
+  StaticApplicationBuild:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ...build-${Environment}...
+      Description: >
+        Build the Static App...
+      ServiceRole: !GetAtt StaticApplicationBuildRole.Arn
+      Artifacts:
+        Type: S3
+        Location: !Ref StaticApplicationBucket
+        Name: /
+        EncryptionDisabled: true
+        OverrideArtifactName: true
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/standard:2.0
+        EnvironmentVariables:
+          - Name: ???
+            Value: ???
+      Source:
+        Type: GITHUB
+        Location: !Sub https://github.com/haydnba/cmsss
+        BuildSpec: >
+          version: 0.2
+
+          phases:
+            install:
+              runtime-versions:
+                nodejs: 12
+              commands:
+                - set -e
+                # NAVIGATE TO APP DIRECTORY
+                - cd application
+                # INSTALL NODE PACKAGES
+                - npm install
+            build:
+              commands:
+                # BUILD THE APPLICATION
+                - npm run build
+          artifacts:
+            files:
+              - index.html
+              - favicon.ico
+              - css/*
+              - static/**/*
+              - robots.txt
+              - manifest.json
+              - asset-manifest.json
+            base-directory: application/build
+        Auth:
+          Type: OAUTH
+      Triggers:
+        Webhook: true
+        FilterGroups:
+          - - Type: EVENT
+              Pattern: PUSH
+            - Type: HEAD_REF
+              Pattern: '^refs/heads/main$'
+
+  StaticApplicationBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action: sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service: codebuild.amazonaws.com
+      Policies:
+        - PolicyName: !Sub ...s3-policy-${Environment}...
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - s3:PutObject
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                Effect: Allow
+                Resource:
+                  - !Sub arn:aws:s3:::${StaticApplicationBucket}
+                  - !Sub arn:aws:s3:::${StaticApplicationBucket}/*
+        - PolicyName: !Sub ...cloudwatch-policy-${Environment}...
+          PolicyDocument:
+            Statement:
+              - Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Effect: Allow
+                Resource:
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}
+                  - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*
+
+
+  #
+  # Storage
+  #
+
+  StaticApplicationBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ...${Environment}...
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  StaticApplicationBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticApplicationBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: s3:GetObject
+            Resource: !Sub arn:aws:s3:::${StaticApplicationBucket}/*
+            Principal: '*'
+
+
+  #
+  # Lambda
+  #
+
+  helloFromLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: transformer/src/handlers/hello-from-lambda.helloFromLambdaHandler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 100
+      Description: A Lambda function that returns a static string.
+      Policies:
+        # Give Lambda basic execution Permission to the helloFromLambda
+        - AWSLambdaBasicExecutionRole
