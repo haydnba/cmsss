@@ -1,24 +1,36 @@
+import { v4 as uuidv4 } from 'uuid'
+
+const { $env } = window
+
 const collections = [
   {
     label: 'Snippet',
     name: 'snippet',
-    folder: window.$env('SNIPPET_LOCATION'),
+    folder: $env('SNIPPET_LOCATION'),
     create: true,
+    identifier_field: 'uuid',
+    slug: '{{uuid}}',
     fields: [
-      {
-        label: 'Title',
-        name: 'title',
-        widget: 'string'
-      },
       {
         label: 'Created',
         name: 'created',
         widget: 'datetime'
       },
       {
-        label: 'Updated',
-        name: 'updated',
-        widget: 'datetime'
+        label: 'Uuid',
+        name: 'uuid',
+        widget: 'hidden',
+        default: uuidv4()
+      },
+      {
+        label: 'Tags',
+        name: 'tags',
+        widget: 'list'
+      },
+      {
+        label: 'Notes',
+        name: 'notes',
+        widget: 'text',
       },
       {
         label: 'Code',

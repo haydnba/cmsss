@@ -2,11 +2,11 @@ import { Component } from 'react'
 import CMS from 'netlify-cms'
 
 export default class App extends Component {
-  componentDidMount() {
+  componentDidMount () {
     CMS.init({ config: this.props.config })
   }
 
-  render() {
+  render () {
     return (
       <div></div>
     )
