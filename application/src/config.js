@@ -2,7 +2,7 @@ const collections = [
   {
     label: 'Snippet',
     name: 'snippet',
-    folder: 'src/assets/snippets',
+    folder: window.$env('SNIPPET_LOCATION'),
     create: true,
     fields: [
       {
